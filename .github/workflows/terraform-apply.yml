@@ -13,6 +13,12 @@ env:
   TF_IN_AUTOMATION: true
   TF_INPUT: false
 
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  TF_VAR_hub_vpc_cidr: ${{ vars.HUB_VPC_CIDR }}
+  TF_VAR_transit_gateway_id: ${{ vars.TRANSIT_GATEWAY_ID }}
+  TF_VAR_hub_test_ip: ${{ vars.HUB_TEST_IP }}
+  TF_VAR_hub_test_port: ${{ vars.HUB_TEST_PORT }}
+
 jobs:
 
   terraform-apply:
@@ -36,6 +42,9 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive ../..
 
       - name: Terraform Init
         run: terraform init
