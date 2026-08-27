@@ -23,7 +23,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::434097521299:role/EC2-SSM-Spoke-Role
+          role-to-assume: arn:aws:iam::434097521299:oidc-provider/token.actions.githubusercontent.com
           aws-region: ap-south-1
 
       - name: Setup Terraform
