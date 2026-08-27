@@ -12,12 +12,7 @@ permissions:
 env:
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
-
   AWS_REGION: ap-south-1
-
-  TF_VAR_hub_vpc_cidr: ${{ vars.HUB_VPC_CIDR }}
-  TF_VAR_transit_gateway_id: ${{ vars.TRANSIT_GATEWAY_ID }}
-  TF_VAR_hub_test_ip: ${{ vars.HUB_TEST_IP }}
 
 jobs:
 
@@ -31,14 +26,26 @@ jobs:
 
     steps:
 
+      # --------------------------------------------------
+      # Checkout
+      # --------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # AWS
+      # --------------------------------------------------
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::434097521299:role/EC2-SSM-Spoke-Role
           aws-region: ap-south-1
+
+      # --------------------------------------------------
+      # Terraform
+      # --------------------------------------------------
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -52,34 +59,75 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
-        working-directory: environments/prod
-        run: |
-          terraform plan \
-          -var="hub_test_port=80" \
-          -out=tfplan
+      # --------------------------------------------------
+      # Check GitHub variables
+      # --------------------------------------------------
 
-      - name: Verify Terraform Plan
-        working-directory: environments/prod
+      - name: Verify Required Variables
         shell: bash
         run: |
-         echo "Current directory:"
-         pwd
+          set -e
 
-         echo "Files:"
-         ls -la
+          echo "Checking GitHub variables..."
 
-         echo "Checking tfplan..."
+          if [ -z "${{ vars.HUB_VPC_CIDR }}" ]; then
+            echo "ERROR: HUB_VPC_CIDR is missing"
+            exit 1
+          fi
 
-         if [ ! -f tfplan ]; then
-          echo "ERROR: tfplan was not created."
-         exit 1
-         fi
+          if [ -z "${{ vars.TRANSIT_GATEWAY_ID }}" ]; then
+            echo "ERROR: TRANSIT_GATEWAY_ID is missing"
+            exit 1
+          fi
 
-         echo "tfplan exists."
-         ls -lh tfplan
+          if [ -z "${{ vars.HUB_TEST_IP }}" ]; then
+            echo "ERROR: HUB_TEST_IP is missing"
+            exit 1
+          fi
 
-         - name: Terraform Apply
-            run: |
-           terraform apply -auto-approve tfplan
+          echo "HUB_VPC_CIDR: configured"
+          echo "TRANSIT_GATEWAY_ID: configured"
+          echo "HUB_TEST_IP: configured"
 
+      # --------------------------------------------------
+      # Terraform Plan
+      # --------------------------------------------------
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="hub_vpc_cidr=${{ vars.HUB_VPC_CIDR }}" \
+            -var="transit_gateway_id=${{ vars.TRANSIT_GATEWAY_ID }}" \
+            -var="hub_test_ip=${{ vars.HUB_TEST_IP }}" \
+            -var="hub_test_port=80" \
+            -out=tfplan
+
+      # --------------------------------------------------
+      # Verify Plan
+      # --------------------------------------------------
+
+      - name: Verify Terraform Plan
+        shell: bash
+        run: |
+          set -e
+
+          echo "Current directory:"
+          pwd
+
+          echo "Checking tfplan..."
+
+          if [ ! -f tfplan ]; then
+            echo "ERROR: tfplan was not created"
+            exit 1
+          fi
+
+          echo "tfplan exists"
+          ls -lh tfplan
+
+      # --------------------------------------------------
+      # Terraform Apply
+      # --------------------------------------------------
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan
