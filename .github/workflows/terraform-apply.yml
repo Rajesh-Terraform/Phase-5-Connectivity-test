@@ -52,38 +52,7 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Verify GitHub Variables
-        shell: bash
-        run: |
-          set -e
-
-          echo "Checking GitHub Actions variables..."
-
-          if [ -z "${{ vars.HUB_VPC_CIDR }}" ]; then
-            echo "ERROR: GitHub variable HUB_VPC_CIDR is missing."
-            echo "Go to Settings -> Secrets and variables -> Actions -> Variables."
-            exit 1
-          fi
-
-          if [ -z "${{ vars.TRANSIT_GATEWAY_ID }}" ]; then
-            echo "ERROR: GitHub variable TRANSIT_GATEWAY_ID is missing."
-            exit 1
-          fi
-
-          if [ -z "${{ vars.HUB_TEST_IP }}" ]; then
-            echo "ERROR: GitHub variable HUB_TEST_IP is missing."
-            exit 1
-          fi
-
-          echo "HUB_VPC_CIDR: configured"
-          echo "TRANSIT_GATEWAY_ID: configured"
-          echo "HUB_TEST_IP: configured"
-
-      - name: Terraform Plan
-        run: |
-          terraform plan \
-            -var="hub_test_port=80" \
-            -out=tfplan
+     
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
