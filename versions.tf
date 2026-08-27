@@ -9,8 +9,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "terraformstatefile9"
-    key          = "phase5/terraform.tfstate"
+    bucket       = "harish-gaddam-bucket123"
+    key          = "terraform.tfstate"
     region       = "ap-south-1"
     use_lockfile = true
   }
