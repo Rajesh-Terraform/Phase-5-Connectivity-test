@@ -83,3 +83,12 @@ resource "aws_instance" "this" {
     Name = "${var.name}-private-test"
   }
 }
+
+
+module "private_ec2" {
+  source = "./modules/private-ec2"
+
+  name      = var.name
+  vpc_id    = var.spoke_vpc_id
+  subnet_id = var.private_subnet_id
+}
