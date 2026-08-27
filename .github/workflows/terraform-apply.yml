@@ -52,7 +52,34 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-     
+      - name: Terraform Plan
+        working-directory: environments/prod
+        run: |
+          terraform plan \
+          -var="hub_test_port=80" \
+          -out=tfplan
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+      - name: Verify Terraform Plan
+        working-directory: environments/prod
+        shell: bash
+        run: |
+         echo "Current directory:"
+         pwd
+
+         echo "Files:"
+         ls -la
+
+         echo "Checking tfplan..."
+
+         if [ ! -f tfplan ]; then
+          echo "ERROR: tfplan was not created."
+         exit 1
+         fi
+
+         echo "tfplan exists."
+         ls -lh tfplan
+
+         - name: Terraform Apply
+            run: |
+           terraform apply -auto-approve tfplan
+
