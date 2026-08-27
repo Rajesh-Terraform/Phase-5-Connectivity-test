@@ -19,7 +19,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 }
 
 resource "aws_route" "to_hub" {
-  count = length(var.subnet_ids)
+  count = length(var.private_route_table_ids)
 
   route_table_id = var.private_route_table_ids[count.index]
 
@@ -30,8 +30,4 @@ resource "aws_route" "to_hub" {
   depends_on = [
     aws_ec2_transit_gateway_vpc_attachment.this
   ]
-}
-
-variable "private_route_table_ids" {
-  type = list(string)
 }

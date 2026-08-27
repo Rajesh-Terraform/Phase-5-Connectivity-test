@@ -6,6 +6,10 @@ variable "subnet_ids" {
   type = list(string)
 }
 
+variable "private_route_table_ids" {
+  type = list(string)
+}
+
 variable "transit_gateway_id" {
   type = string
 }

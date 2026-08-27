@@ -1,57 +1,3 @@
-resource "aws_security_group" "vpce" {
-  name        = "${var.project_name}-vpce"
-  description = "Allow private spoke instances to reach VPC endpoints"
-  vpc_id      = module.spoke.vpc_id
-
-  ingress {
-    description = "HTTPS from spoke"
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
-    cidr_blocks = [var.spoke_vpc_cidr]
-  }
-
-  egress {
-    description = "Endpoint return traffic"
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-vpce-sg"
-  }
-}
-
-resource "aws_security_group" "test_instance" {
-  name        = "${var.project_name}-instance"
-  description = "Connectivity test instance"
-  vpc_id      = module.spoke.vpc_id
-
-  # SSM/VPC endpoints
-  egress {
-    description = "HTTPS to AWS VPC endpoints"
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
-    cidr_blocks = [var.spoke_vpc_cidr]
-  }
-
-  # TGW -> hub
-  egress {
-    description = "Hub connectivity"
-    protocol    = "tcp"
-    from_port   = 0
-    to_port     = 65535
-    cidr_blocks = [var.hub_vpc_cidr]
-  }
-
-  tags = {
-    Name = "${var.project_name}-instance-sg"
-  }
-}
-
 module "spoke" {
   source = "../../modules/spoke-vpc"
 
@@ -64,13 +10,17 @@ module "spoke" {
   private_subnet_cidrs = var.spoke_private_subnet_cidrs
 }
 
+# ------------------------------------------------------------
+# Security group for VPC interface endpoints
+# ------------------------------------------------------------
+
 resource "aws_security_group" "vpce" {
   name        = "${var.project_name}-vpce"
-  description = "Allow HTTPS from spoke instances to VPC endpoints"
+  description = "Allow HTTPS from private EC2 instances to VPC endpoints"
   vpc_id      = module.spoke.vpc_id
 
   ingress {
-    description = "HTTPS from spoke"
+    description = "HTTPS from spoke VPC"
     protocol    = "tcp"
     from_port   = 443
     to_port     = 443
@@ -89,6 +39,10 @@ resource "aws_security_group" "vpce" {
     Name = "${var.project_name}-vpce-sg"
   }
 }
+
+# ------------------------------------------------------------
+# VPC endpoints
+# ------------------------------------------------------------
 
 module "endpoints" {
   source = "../../modules/vpc-endpoints"
@@ -102,21 +56,27 @@ module "endpoints" {
   endpoint_security_group_id = aws_security_group.vpce.id
 }
 
+# ------------------------------------------------------------
+# Security group for private test EC2
+# ------------------------------------------------------------
+
 resource "aws_security_group" "test_instance" {
   name        = "${var.project_name}-instance"
   description = "Private connectivity test instance"
   vpc_id      = module.spoke.vpc_id
 
+  # HTTPS to AWS interface endpoints
   egress {
-    description = "HTTPS to AWS endpoints"
+    description = "HTTPS to AWS VPC endpoints"
     protocol    = "tcp"
     from_port   = 443
     to_port     = 443
     cidr_blocks = [var.spoke_vpc_cidr]
   }
 
+  # Connectivity to the hub through TGW
   egress {
-    description = "Connectivity to hub"
+    description = "Connectivity to hub through TGW"
     protocol    = "tcp"
     from_port   = 0
     to_port     = 65535
@@ -127,6 +87,10 @@ resource "aws_security_group" "test_instance" {
     Name = "${var.project_name}-instance-sg"
   }
 }
+
+# ------------------------------------------------------------
+# TGW attachment
+# ------------------------------------------------------------
 
 module "tgw" {
   source = "../../modules/tgw-attachment"
@@ -142,6 +106,10 @@ module "tgw" {
   hub_vpc_cidr = var.hub_vpc_cidr
 }
 
+# ------------------------------------------------------------
+# Private EC2 managed by SSM
+# ------------------------------------------------------------
+
 module "test_instance" {
   source = "../../modules/ssm-test-instance"
 
@@ -153,5 +121,3 @@ module "test_instance" {
 
   instance_type = "t3.micro"
 }
-
-
