@@ -34,13 +34,13 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # AWS
+      # AWS Authentication
       # --------------------------------------------------
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::434097521299:role/EC2-SSM-Spoke-Role
+          role-to-assume:  arn:aws:iam::434097521299:role/EC2-SSM-Spoke-Role
           aws-region: ap-south-1
 
       # --------------------------------------------------
@@ -60,15 +60,55 @@ jobs:
         run: terraform validate
 
       # --------------------------------------------------
-      # Check GitHub variables
+      # Check GitHub Variables
       # --------------------------------------------------
 
-     
+      - name: Check Required Variables
+        shell: bash
+        run: |
+          set -e
+
+          echo "Checking required GitHub variables..."
+
+          if [ -z "${{ vars.HUB_VPC_CIDR }}" ]; then
+            echo "ERROR: HUB_VPC_CIDR is empty"
+            exit 1
+          fi
+
+          if [ -z "${{ vars.TRANSIT_GATEWAY_ID }}" ]; then
+            echo "ERROR: TRANSIT_GATEWAY_ID is empty"
+            exit 1
+          fi
+
+          if [ -z "${{ vars.HUB_TEST_IP }}" ]; then
+            echo "ERROR: HUB_TEST_IP is empty"
+            exit 1
+          fi
+
+          echo "HUB_VPC_CIDR: configured"
+          echo "TRANSIT_GATEWAY_ID: configured"
+          echo "HUB_TEST_IP: configured"
+
       # --------------------------------------------------
       # Terraform Plan
       # --------------------------------------------------
 
-      
+      - name: Terraform Plan
+        shell: bash
+        run: |
+          set -e
+
+          echo "Running Terraform plan..."
+
+          terraform plan \
+            -var="hub_vpc_cidr=${{ vars.HUB_VPC_CIDR }}" \
+            -var="transit_gateway_id=${{ vars.TRANSIT_GATEWAY_ID }}" \
+            -var="hub_test_ip=${{ vars.HUB_TEST_IP }}" \
+            -var="hub_test_port=80" \
+            -out=tfplan
+
+          echo "Terraform plan completed."
+
       # --------------------------------------------------
       # Verify Plan
       # --------------------------------------------------
@@ -81,6 +121,9 @@ jobs:
           echo "Current directory:"
           pwd
 
+          echo "Files:"
+          ls -la
+
           echo "Checking tfplan..."
 
           if [ ! -f tfplan ]; then
@@ -88,7 +131,7 @@ jobs:
             exit 1
           fi
 
-          echo "tfplan exists"
+          echo "SUCCESS: tfplan exists"
           ls -lh tfplan
 
       # --------------------------------------------------
@@ -96,5 +139,12 @@ jobs:
       # --------------------------------------------------
 
       - name: Terraform Apply
+        shell: bash
         run: |
+          set -e
+
+          echo "Applying Terraform plan..."
+
           terraform apply -auto-approve tfplan
+
+          echo "Terraform apply completed successfully."
