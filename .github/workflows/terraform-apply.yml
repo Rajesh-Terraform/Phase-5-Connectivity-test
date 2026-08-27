@@ -31,8 +31,16 @@ jobs:
 
     steps:
 
+      # ------------------------------------------------------
+      # Checkout
+      # ------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      # ------------------------------------------------------
+      # AWS OIDC
+      # ------------------------------------------------------
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -40,42 +48,79 @@ jobs:
           role-to-assume: arn:aws:iam::434097521299:role/EC2-SSM-Spoke-Role
           aws-region: ap-south-1
 
+      # ------------------------------------------------------
+      # Terraform
+      # ------------------------------------------------------
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      # ------------------------------------------------------
+      # Format
+      # ------------------------------------------------------
 
       - name: Terraform Format Check
         run: terraform fmt 
 
+      # ------------------------------------------------------
+      # Init
+      # ------------------------------------------------------
+
       - name: Terraform Init
         run: terraform init
+
+      # ------------------------------------------------------
+      # Validate
+      # ------------------------------------------------------
 
       - name: Terraform Validate
         run: terraform validate
 
+      # ------------------------------------------------------
+      # Verify variables
+      # ------------------------------------------------------
+
       - name: Verify Required Variables
+        shell: bash
         run: |
-          test -n "$TF_VAR_hub_vpc_cidr" || {
+          set -e
+
+          echo "Checking required Terraform variables..."
+
+          if [ -z "${TF_VAR_hub_vpc_cidr:-}" ]; then
             echo "ERROR: HUB_VPC_CIDR is empty"
             exit 1
-          }
+          fi
 
-          test -n "$TF_VAR_transit_gateway_id" || {
+          if [ -z "${TF_VAR_transit_gateway_id:-}" ]; then
             echo "ERROR: TRANSIT_GATEWAY_ID is empty"
             exit 1
-          }
+          fi
 
-          test -n "$TF_VAR_hub_test_ip" || {
+          if [ -z "${TF_VAR_hub_test_ip:-}" ]; then
             echo "ERROR: HUB_TEST_IP is empty"
             exit 1
-          }
+          fi
 
-          echo "Required Terraform variables are configured."
+          echo "HUB_VPC_CIDR: configured"
+          echo "TRANSIT_GATEWAY_ID: configured"
+          echo "HUB_TEST_IP: configured"
+
+          echo "All required variables are configured."
+
+      # ------------------------------------------------------
+      # Plan
+      # ------------------------------------------------------
 
       - name: Terraform Plan
         run: |
           terraform plan \
             -var="hub_test_port=80" \
             -out=tfplan
+
+      # ------------------------------------------------------
+      # Apply
+      # ------------------------------------------------------
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
