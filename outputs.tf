@@ -13,12 +13,3 @@ output "private_instance_security_group" {
   value       = module.private_ec2.security_group_id
 }
 
-output "hub_test_instance_id" {
-  description = "Hub test instance ID"
-  value       = var.create_hub_test ? module.hub_test[0].instance_id : null
-}
-
-output "hub_test_private_ip" {
-  description = "Hub test private IP"
-  value       = var.create_hub_test ? module.hub_test[0].private_ip : null
-}
