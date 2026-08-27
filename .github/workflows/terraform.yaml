@@ -23,7 +23,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::434097521299:role/AWS-QuickSetup-SSM-DefaultEC2MgmtRole-ap-south-1
+          role-to-assume: "ec2.amazonaws.com"
           aws-region: ap-south-1
 
       - name: Setup Terraform
