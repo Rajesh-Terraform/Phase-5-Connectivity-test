@@ -2,15 +2,11 @@ variable "name" {
   type = string
 }
 
-variable "vpc_id" {
-  type = string
-}
-
 variable "subnet_id" {
   type = string
 }
 
-variable "spoke_cidr" {
+variable "security_group_id" {
   type = string
 }
 

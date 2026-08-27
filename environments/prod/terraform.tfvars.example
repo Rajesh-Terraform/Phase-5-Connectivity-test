@@ -1,0 +1,22 @@
+aws_region  = "ap-south-1"
+project_name = "connectivity-test"
+environment = "prod"
+
+spoke_vpc_cidr = "10.1.0.0/16"
+
+spoke_private_subnet_cidrs = [
+  "10.1.10.0/24",
+  "10.1.20.0/24"
+]
+
+availability_zones = [
+  "ap-south-1a",
+  "ap-south-1b"
+]
+
+hub_vpc_cidr      = "10.0.0.0/16"
+transit_gateway_id = "tgw-xxxxxxxxxxxxxxxxx"
+
+# Example private IP of a service in the hub.
+hub_test_ip   = "10.0.10.100"
+hub_test_port = 80

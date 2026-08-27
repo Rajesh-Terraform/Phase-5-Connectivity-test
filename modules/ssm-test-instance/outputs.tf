@@ -6,6 +6,6 @@ output "private_ip" {
   value = aws_instance.this.private_ip
 }
 
-output "security_group_id" {
-  value = aws_security_group.private_ec2.id
+output "instance_profile" {
+  value = aws_iam_instance_profile.ssm.name
 }
