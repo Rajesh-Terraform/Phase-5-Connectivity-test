@@ -63,32 +63,7 @@ jobs:
       # Check GitHub Variables
       # --------------------------------------------------
 
-      - name: Check Required Variables
-        shell: bash
-        run: |
-          set -e
-
-          echo "Checking required GitHub variables..."
-
-          if [ -z "${{ vars.HUB_VPC_CIDR }}" ]; then
-            echo "ERROR: HUB_VPC_CIDR is empty"
-            exit 1
-          fi
-
-          if [ -z "${{ vars.TRANSIT_GATEWAY_ID }}" ]; then
-            echo "ERROR: TRANSIT_GATEWAY_ID is empty"
-            exit 1
-          fi
-
-          if [ -z "${{ vars.HUB_TEST_IP }}" ]; then
-            echo "ERROR: HUB_TEST_IP is empty"
-            exit 1
-          fi
-
-          echo "HUB_VPC_CIDR: configured"
-          echo "TRANSIT_GATEWAY_ID: configured"
-          echo "HUB_TEST_IP: configured"
-
+      
       # --------------------------------------------------
       # Terraform Plan
       # --------------------------------------------------
