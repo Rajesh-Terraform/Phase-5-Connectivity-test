@@ -13,10 +13,21 @@ permissions:
   pull-requests: write
 
 env:
-  TF_IN_AUTOMATION: true
-  TF_INPUT: false
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+  AWS_REGION: ap-south-1
+
+  TF_VAR_hub_vpc_cidr: ${{ vars.HUB_VPC_CIDR }}
+  TF_VAR_transit_gateway_id: ${{ vars.TRANSIT_GATEWAY_ID }}
+  TF_VAR_hub_test_ip: ${{ vars.HUB_TEST_IP }}
+
+  # Terraform number variables are safer passed explicitly
+  # through -var rather than relying on TF_VAR string conversion.
+  TF_VAR_hub_test_port: "80"
 
 jobs:
+
   terraform-plan:
 
     runs-on: ubuntu-latest
@@ -39,7 +50,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Format
+      - name: Terraform Format Check
         run: terraform fmt -check -recursive ../..
 
       - name: Terraform Init
@@ -48,5 +59,18 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Debug Terraform Variables
+        env:
+          HUB_VPC_CIDR: ${{ vars.HUB_VPC_CIDR }}
+          TRANSIT_GATEWAY_ID: ${{ vars.TRANSIT_GATEWAY_ID }}
+          HUB_TEST_IP: ${{ vars.HUB_TEST_IP }}
+        run: |
+          echo "HUB_VPC_CIDR configured: ${{ vars.HUB_VPC_CIDR != '' }}"
+          echo "TRANSIT_GATEWAY_ID configured: ${{ vars.TRANSIT_GATEWAY_ID != '' }}"
+          echo "HUB_TEST_IP configured: ${{ vars.HUB_TEST_IP != '' }}"
+
       - name: Terraform Plan
-        run: terraform plan
+        run: |
+          terraform plan \
+            -var="hub_test_port=80" \
+            -out=tfplan

@@ -10,14 +10,14 @@ permissions:
   contents: read
 
 env:
-  TF_IN_AUTOMATION: true
-  TF_INPUT: false
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
 
-  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_REGION: ap-south-1
+
   TF_VAR_hub_vpc_cidr: ${{ vars.HUB_VPC_CIDR }}
   TF_VAR_transit_gateway_id: ${{ vars.TRANSIT_GATEWAY_ID }}
   TF_VAR_hub_test_ip: ${{ vars.HUB_TEST_IP }}
-  TF_VAR_hub_test_port: ${{ vars.HUB_TEST_PORT }}
 
 jobs:
 
@@ -52,8 +52,30 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Verify Required Variables
+        run: |
+          test -n "$TF_VAR_hub_vpc_cidr" || {
+            echo "ERROR: HUB_VPC_CIDR is empty"
+            exit 1
+          }
+
+          test -n "$TF_VAR_transit_gateway_id" || {
+            echo "ERROR: TRANSIT_GATEWAY_ID is empty"
+            exit 1
+          }
+
+          test -n "$TF_VAR_hub_test_ip" || {
+            echo "ERROR: HUB_TEST_IP is empty"
+            exit 1
+          }
+
+          echo "Required Terraform variables are configured."
+
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: |
+          terraform plan \
+            -var="hub_test_port=80" \
+            -out=tfplan
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
