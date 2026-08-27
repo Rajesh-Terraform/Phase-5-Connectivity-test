@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "terraformstatefile9"
+    bucket = "harish-gaddam-bucket123"
     key    = "terraform.tfstate"
-    region = "eu-north-1"
+    region = "ap-south-1"
   }
 }
