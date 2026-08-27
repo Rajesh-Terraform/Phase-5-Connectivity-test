@@ -68,15 +68,7 @@ jobs:
       # Terraform Plan
       # --------------------------------------------------
 
-      - name: Terraform Plan
-        run: |
-          terraform plan \
-            -var="hub_vpc_cidr=${{ vars.HUB_VPC_CIDR }}" \
-            -var="transit_gateway_id=${{ vars.TRANSIT_GATEWAY_ID }}" \
-            -var="hub_test_ip=${{ vars.HUB_TEST_IP }}" \
-            -var="hub_test_port=80" \
-            -out=tfplan
-
+      
       # --------------------------------------------------
       # Verify Plan
       # --------------------------------------------------
