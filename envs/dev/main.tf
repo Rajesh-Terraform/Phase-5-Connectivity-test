@@ -132,15 +132,3 @@ module "test_ec2" {
   instance_type = var.instance_type
 }
 
-
-module "test_ec2" {
-  source = "../../modules/ec2"
-
-  name = "${var.project_name}-test"
-
-  vpc_id = module.spoke.vpc_id
-
-  subnet_id = module.spoke.private_subnet_id
-
-  instance_type = var.instance_type
-}
