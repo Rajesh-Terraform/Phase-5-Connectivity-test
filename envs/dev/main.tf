@@ -2,6 +2,10 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# ---------------------------------------------------------
+# HUB VPC
+# ---------------------------------------------------------
+
 module "hub" {
   source = "../../modules/vpc"
 
@@ -14,6 +18,10 @@ module "hub" {
 
   create_internet_gateway = false
 }
+
+# ---------------------------------------------------------
+# SPOKE VPC
+# ---------------------------------------------------------
 
 module "spoke" {
   source = "../../modules/vpc"
@@ -28,6 +36,9 @@ module "spoke" {
   create_internet_gateway = false
 }
 
+# ---------------------------------------------------------
+# TRANSIT GATEWAY
+# ---------------------------------------------------------
 
 module "tgw" {
   source = "../../modules/tgw"
@@ -51,4 +62,85 @@ module "tgw" {
       ]
     }
   }
+}
+
+# ---------------------------------------------------------
+# SPOKE -> HUB ROUTE
+# ---------------------------------------------------------
+
+resource "aws_route" "spoke_to_hub" {
+  route_table_id = module.spoke.private_route_table_id
+
+  destination_cidr_block = var.hub_vpc_cidr
+
+  transit_gateway_id = module.tgw.transit_gateway_id
+
+  depends_on = [
+    module.tgw
+  ]
+}
+
+# ---------------------------------------------------------
+# HUB -> SPOKE ROUTE
+# ---------------------------------------------------------
+
+resource "aws_route" "hub_to_spoke" {
+  route_table_id = module.hub.private_route_table_id
+
+  destination_cidr_block = var.vpc_cidr
+
+  transit_gateway_id = module.tgw.transit_gateway_id
+
+  depends_on = [
+    module.tgw
+  ]
+}
+
+# ---------------------------------------------------------
+# VPC ENDPOINTS
+# ---------------------------------------------------------
+
+module "endpoints" {
+  source = "../../modules/endpoints"
+
+  vpc_id = module.spoke.vpc_id
+
+  route_table_ids = [
+    module.spoke.private_route_table_id
+  ]
+
+  subnet_ids = [
+    module.spoke.private_subnet_id
+  ]
+
+  region = var.aws_region
+}
+
+# ---------------------------------------------------------
+# PRIVATE TEST EC2
+# ---------------------------------------------------------
+
+module "test_ec2" {
+  source = "../../modules/ec2"
+
+  name = "${var.project_name}-test"
+
+  vpc_id = module.spoke.vpc_id
+
+  subnet_id = module.spoke.private_subnet_id
+
+  instance_type = var.instance_type
+}
+
+
+module "test_ec2" {
+  source = "../../modules/ec2"
+
+  name = "${var.project_name}-test"
+
+  vpc_id = module.spoke.vpc_id
+
+  subnet_id = module.spoke.private_subnet_id
+
+  instance_type = var.instance_type
 }

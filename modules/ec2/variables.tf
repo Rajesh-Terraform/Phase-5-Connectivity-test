@@ -1,16 +1,21 @@
 variable "name" {
-  type = string
+  description = "EC2 instance name"
+  type        = string
 }
 
 variable "subnet_id" {
-  type = string
+  description = "Subnet where EC2 will be deployed"
+  type        = string
 }
 
 variable "vpc_id" {
-  type = string
+  description = "VPC ID"
+  type        = string
 }
 
 variable "instance_type" {
-  type    = string
-  default = "t3.micro"
-}
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
+}  
+  
