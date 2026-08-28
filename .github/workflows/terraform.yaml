@@ -37,10 +37,13 @@ jobs:
 
       - name: Terraform Format
         run: terraform fmt 
-
+ 
       - name: Terraform Validate
         run: terraform validate
 
-      
+
+      - name: Remove stale Terraform lock
+        run: aws s3 rm s3://harish-gaddam-bucket123/envs/dev/terraform.tfstate.tflock
+
       - name: Terraform Destroy
-        run: terraform destroy 
+        run: terraform destroy -auto-approve
