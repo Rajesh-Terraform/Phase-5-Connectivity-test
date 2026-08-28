@@ -99,36 +99,3 @@ resource "aws_route" "hub_to_spoke" {
 # ---------------------------------------------------------
 # VPC ENDPOINTS
 # ---------------------------------------------------------
-
-module "endpoints" {
-  source = "../../modules/endpoints"
-
-  vpc_id = module.spoke.vpc_id
-
-  route_table_ids = [
-    module.spoke.private_route_table_id
-  ]
-
-  subnet_ids = [
-    module.spoke.private_subnet_id
-  ]
-
-  region = var.aws_region
-}
-
-# ---------------------------------------------------------
-# PRIVATE TEST EC2
-# ---------------------------------------------------------
-
-module "test_ec2" {
-  source = "../../modules/ec2"
-
-  name = "${var.project_name}-test"
-
-  vpc_id = module.spoke.vpc_id
-
-  subnet_id = module.spoke.private_subnet_id
-
-  instance_type = var.instance_type
-}
-
