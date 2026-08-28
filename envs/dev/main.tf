@@ -99,3 +99,18 @@ resource "aws_route" "hub_to_spoke" {
 # ---------------------------------------------------------
 # VPC ENDPOINTS
 # ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# TEST EC2
+# ---------------------------------------------------------
+
+module "test_ec2" {
+  source = "../../modules/ec2"
+
+  # These arguments must match ../../modules/ec2/variables.tf
+  # Example:
+  name      = "${var.project_name}-test"
+  vpc_id    = module.spoke.vpc_id
+  subnet_id = module.spoke.private_subnet_id
+}
