@@ -108,9 +108,8 @@ resource "aws_route" "hub_to_spoke" {
 module "test_ec2" {
   source = "../../modules/ec2"
 
-  # These arguments must match ../../modules/ec2/variables.tf
-  # Example:
-  name      = "${var.project_name}-test"
-  vpc_id    = module.spoke.vpc_id
-  subnet_id = module.spoke.private_subnet_id
+  name          = "${var.project_name}-test"
+  vpc_id        = module.spoke.vpc_id
+  subnet_id     = module.spoke.private_subnet_id
+  instance_type = "t3.micro"
 }
